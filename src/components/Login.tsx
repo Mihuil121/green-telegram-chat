@@ -1,21 +1,25 @@
-import { useState } from 'react';
-import { ApiError, defaultApiUrl, getStateInstance } from '../api.js';
+import React, { useState } from 'react';
+import { ApiError, defaultApiUrl, getStateInstance, Creds } from '../api';
 
-export default function Login({ onLogin }) {
+export interface LoginProps {
+  onLogin: (creds: Creds) => void;
+}
+
+export default function Login({ onLogin }: LoginProps) {
   const [idInstance, setId] = useState('');
   const [apiTokenInstance, setToken] = useState('');
   const [apiUrl, setApiUrl] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function submit(e) {
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
     const id = idInstance.trim();
     const token = apiTokenInstance.trim();
     if (!/^\d{4,}$/.test(id)) return setError('idInstance — это число из личного кабинета GREEN-API');
     if (!token) return setError('Введите apiTokenInstance');
 
-    const creds = {
+    const creds: Creds = {
       idInstance: id,
       apiTokenInstance: token,
       apiUrl: (apiUrl.trim() || defaultApiUrl(id)).replace(/\/+$/, ''),
@@ -30,7 +34,7 @@ export default function Login({ onLogin }) {
         );
       }
       onLogin(creds);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setBusy(false);

@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { Chat, Message } from '../hooks/useMessenger';
 
 const MAX_LENGTH = 4096;
-const fmtTime = (t) => new Date(t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const fmtTime = (t: number) => new Date(t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-export default function ChatView({ chat, onSend, onRetry, onBack }) {
+export interface ChatViewProps {
+  chat: Chat | null;
+  onSend: (chatId: string, text: string) => void;
+  onRetry: (chatId: string, message: Message) => void;
+  onBack: () => void;
+}
+
+export default function ChatView({ chat, onSend, onRetry, onBack }: ChatViewProps) {
   const [text, setText] = useState('');
-  const endRef = useRef(null);
+  const endRef = useRef<HTMLLIElement>(null);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ block: 'end' });
@@ -19,7 +27,7 @@ export default function ChatView({ chat, onSend, onRetry, onBack }) {
     );
   }
 
-  function submit(e) {
+  function submit(e?: React.FormEvent) {
     e?.preventDefault();
     const value = text.trim();
     if (!value) return;
@@ -27,8 +35,11 @@ export default function ChatView({ chat, onSend, onRetry, onBack }) {
     setText('');
   }
 
-  function onKeyDown(e) {
-    if (e.key === 'Enter' && !e.shiftKey) submit(e);
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      submit();
+    }
   }
 
   return (

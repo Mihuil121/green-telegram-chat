@@ -1,20 +1,27 @@
 import { useState } from 'react';
-import Login from './components/Login.jsx';
-import Sidebar from './components/Sidebar.jsx';
-import ChatView from './components/ChatView.jsx';
-import { useMessenger } from './hooks/useMessenger.js';
+import Login from './components/Login';
+import Sidebar from './components/Sidebar';
+import ChatView from './components/ChatView';
+import { useMessenger } from './hooks/useMessenger';
+import { Creds } from './api';
 
 const CREDS_KEY = 'tg-chat-creds';
 
-function loadCreds() {
+function loadCreds(): Creds | null {
   try {
-    return JSON.parse(sessionStorage.getItem(CREDS_KEY));
+    const saved = sessionStorage.getItem(CREDS_KEY);
+    return saved ? JSON.parse(saved) : null;
   } catch {
     return null;
   }
 }
 
-function Messenger({ creds, onLogout }) {
+interface MessengerProps {
+  creds: Creds;
+  onLogout: () => void;
+}
+
+function Messenger({ creds, onLogout }: MessengerProps) {
   const { state, connection, openChat, selectChat, send, retry } = useMessenger(creds);
   const chats = Object.values(state.chats).sort((a, b) => b.updatedAt - a.updatedAt);
   const active = state.activeId ? state.chats[state.activeId] : null;
@@ -36,9 +43,9 @@ function Messenger({ creds, onLogout }) {
 }
 
 export default function App() {
-  const [creds, setCreds] = useState(loadCreds);
+  const [creds, setCreds] = useState<Creds | null>(loadCreds);
 
-  const login = (c) => {
+  const login = (c: Creds) => {
     sessionStorage.setItem(CREDS_KEY, JSON.stringify(c));
     setCreds(c);
   };

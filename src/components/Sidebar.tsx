@@ -1,10 +1,11 @@
-import { useState } from 'react';
-import { checkAccount } from '../api.js';
+import React, { useState } from 'react';
+import { checkAccount, Creds } from '../api';
+import { Chat } from '../hooks/useMessenger';
 
 const initials = (name = '?') => name.trim().slice(0, 1).toUpperCase() || '?';
-const fmtTime = (t) => new Date(t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
+const fmtTime = (t: number) => new Date(t).toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' });
 
-function parseRecipient(raw) {
+function parseRecipient(raw: string): { phone?: string; username?: string } | null {
   const value = raw.trim();
   if (value.startsWith('@')) {
     return /^@[A-Za-z0-9_]{5,32}$/.test(value) ? { username: value } : null;
@@ -14,13 +15,31 @@ function parseRecipient(raw) {
   return digits.length >= 7 && digits.length <= 15 ? { phone: digits } : null;
 }
 
-export default function Sidebar({ creds, chats, activeId, connection, onSelect, onOpen, onLogout }) {
+export interface SidebarProps {
+  creds: Creds;
+  chats: Chat[];
+  activeId: string | null;
+  connection: 'online' | 'offline' | 'connecting';
+  onSelect: (id: string | null) => void;
+  onOpen: (chat: { id: string; name: string; phone?: string }) => void;
+  onLogout: () => void;
+}
+
+export default function Sidebar({
+  creds,
+  chats,
+  activeId,
+  connection,
+  onSelect,
+  onOpen,
+  onLogout,
+}: SidebarProps) {
   const [creating, setCreating] = useState(chats.length === 0);
   const [value, setValue] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
-  async function create(e) {
+  async function create(e: React.FormEvent) {
     e.preventDefault();
     const recipient = parseRecipient(value);
     if (!recipient) {
@@ -42,7 +61,7 @@ export default function Sidebar({ creds, chats, activeId, connection, onSelect, 
       });
       setValue('');
       setCreating(false);
-    } catch (err) {
+    } catch (err: any) {
       setError(err.message);
     } finally {
       setBusy(false);
